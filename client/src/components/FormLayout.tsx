@@ -278,8 +278,9 @@ export function CheckboxGroup({
   return (
     <div className="space-y-2">
       {options.map((option) => (
-        <label
+        <div
           key={option.value}
+          onClick={() => toggle(option.value)}
           className={`flex items-center gap-3 px-4 py-3 rounded border cursor-pointer transition-all duration-300 ${
             values.includes(option.value)
               ? "border-[#B8960C] bg-[#B8960C]/10"
@@ -298,7 +299,7 @@ export function CheckboxGroup({
             )}
           </div>
           <span className="text-sm text-[#F5F0E8]/90">{option.label}</span>
-        </label>
+        </div>
       ))}
     </div>
   );

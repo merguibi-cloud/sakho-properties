@@ -41,9 +41,29 @@ const HEADERS = {
  * Fonction principale - Reçoit les données du formulaire (POST)
  */
 function doPost(e) {
+  // Acquérir un verrou pour éviter les doublons en cas de clics rapides
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: "Serveur occupé, veuillez réessayer."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
   try {
     const data = JSON.parse(e.postData.contents);
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Validation basique côté serveur
+    if (!data.email || !data.nom || !data.prenom) {
+      lock.releaseLock();
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: "Champs obligatoires manquants (nom, prénom, email)"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // Déterminer l'onglet cible
     const domain = data.domain;
@@ -71,6 +91,31 @@ function doPost(e) {
       }
     }
 
+    // Détection de doublons : même email + domaine dans les 60 dernières secondes
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      const emailCol = 4; // Colonne D = Email
+      const dateCol = 1;  // Colonne A = Date
+      // Vérifier les 5 dernières lignes pour les doublons récents
+      const checkStart = Math.max(2, lastRow - 4);
+      const range = sheet.getRange(checkStart, 1, lastRow - checkStart + 1, emailCol);
+      const values = range.getValues();
+      const now = new Date();
+      for (let i = values.length - 1; i >= 0; i--) {
+        if (values[i][emailCol - 1] === data.email) {
+          const rowDate = new Date(values[i][dateCol - 1]);
+          const diffSeconds = (now - rowDate) / 1000;
+          if (diffSeconds < 60) {
+            lock.releaseLock();
+            return ContentService.createTextOutput(JSON.stringify({
+              success: true,
+              message: "Soumission déjà enregistrée"
+            })).setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+      }
+    }
+
     // Préparer la ligne de données
     const row = prepareRow(domain, data);
 
@@ -78,18 +123,20 @@ function doPost(e) {
     sheet.appendRow(row);
 
     // Formater la dernière ligne (alternance de couleurs)
-    const lastRow = sheet.getLastRow();
-    if (lastRow % 2 === 0) {
-      sheet.getRange(lastRow, 1, 1, row.length).setBackground("#f5f5f5");
+    const newLastRow = sheet.getLastRow();
+    if (newLastRow % 2 === 0) {
+      sheet.getRange(newLastRow, 1, 1, row.length).setBackground("#f5f5f5");
     }
 
+    lock.releaseLock();
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: "Lead enregistré dans " + sheetName,
-      row: lastRow
+      row: newLastRow
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
+    lock.releaseLock();
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
