@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Gem } from "lucide-react";
 import { toast } from "sonner";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import FormLayout, {
   ContactFields,
   FormSection,
@@ -35,15 +35,21 @@ export default function ArchispaceForm() {
   const [demarrage, setDemarrage] = useState("");
   const [budgetDesign, setBudgetDesign] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    const contactError = validateContact(contact);
+    if (contactError) { toast.error(contactError); return; }
     if (!typeBien) { toast.error("Veuillez sélectionner le type de bien."); return; }
     if (!ville.trim()) { toast.error("Veuillez indiquer la ville."); return; }
     if (!demarrage) { toast.error("Veuillez indiquer quand vous souhaitez démarrer."); return; }
     if (!budgetDesign) { toast.error("Veuillez indiquer votre budget estimé."); return; }
 
-    await submitToGoogleSheets({
+    setIsLoading(true);
+    const result = await submitToGoogleSheets({
       domain: "archispace",
       nom: contact.nom,
       prenom: contact.prenom,
@@ -54,8 +60,13 @@ export default function ArchispaceForm() {
       demarrage: LABELS[demarrage] || demarrage,
       budgetDesign: LABELS[budgetDesign] || budgetDesign,
     });
+    setIsLoading(false);
 
-    setSubmitted(true);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -121,7 +132,7 @@ export default function ArchispaceForm() {
         </FormField>
       </FormSection>
 
-      <SubmitButton label="Demander un devis" />
+      <SubmitButton label="Demander un devis" isLoading={isLoading} />
     </FormLayout>
   );
 }

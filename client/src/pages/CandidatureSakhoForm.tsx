@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import FormLayout, {
   ContactFields,
   FormSection,
@@ -52,9 +52,14 @@ export default function CandidatureSakhoForm() {
   const [disponibilite, setDisponibilite] = useState("");
   const [motivation, setMotivation] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    const contactError = validateContact(contact);
+    if (contactError) { toast.error(contactError); return; }
     if (!poste) { toast.error("Veuillez sélectionner un poste souhaité."); return; }
     if (poste === "autre" && !posteAutre.trim()) { toast.error("Veuillez préciser le poste souhaité."); return; }
     if (!baseDubai) { toast.error("Veuillez indiquer si vous êtes basé(e) à Dubaï."); return; }
@@ -65,7 +70,8 @@ export default function CandidatureSakhoForm() {
 
     const posteLabel = poste === "autre" ? `Autre : ${posteAutre}` : (LABELS[poste] || poste);
 
-    await submitToGoogleSheets({
+    setIsLoading(true);
+    const result = await submitToGoogleSheets({
       domain: "candidature-sakho",
       nom: contact.nom,
       prenom: contact.prenom,
@@ -79,8 +85,13 @@ export default function CandidatureSakhoForm() {
       disponibilite: LABELS[disponibilite] || disponibilite,
       motivation,
     });
+    setIsLoading(false);
 
-    setSubmitted(true);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -204,7 +215,7 @@ export default function CandidatureSakhoForm() {
         </FormField>
       </FormSection>
 
-      <SubmitButton label="Envoyer ma candidature" />
+      <SubmitButton label="Envoyer ma candidature" isLoading={isLoading} />
     </FormLayout>
   );
 }

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { Handshake } from "lucide-react";
 import { toast } from "sonner";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import FormLayout, {
   ContactFields,
   FormSection,
@@ -32,13 +32,19 @@ export default function PartenariatForm() {
   const [natureActivite, setNatureActivite] = useState("");
   const [vision, setVision] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    const contactError = validateContact(contact);
+    if (contactError) { toast.error(contactError); return; }
     if (!typePartenariat) { toast.error("Veuillez sélectionner un type de partenariat."); return; }
     if (!natureActivite) { toast.error("Veuillez indiquer la nature de votre activité."); return; }
 
-    await submitToGoogleSheets({
+    setIsLoading(true);
+    const result = await submitToGoogleSheets({
       domain: "partenariat",
       nom: contact.nom,
       prenom: contact.prenom,
@@ -48,8 +54,13 @@ export default function PartenariatForm() {
       natureActivite: LABELS[natureActivite] || natureActivite,
       vision: vision,
     });
+    setIsLoading(false);
 
-    setSubmitted(true);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -103,7 +114,7 @@ export default function PartenariatForm() {
         </FormField>
       </FormSection>
 
-      <SubmitButton label="Proposer un partenariat" />
+      <SubmitButton label="Proposer un partenariat" isLoading={isLoading} />
     </FormLayout>
   );
 }

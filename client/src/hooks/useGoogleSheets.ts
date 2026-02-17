@@ -19,6 +19,21 @@ export interface FormData {
   [key: string]: string | string[];
 }
 
+// Validation des champs contact
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Numéro international obligatoire : doit commencer par + suivi de l'indicatif pays
+const PHONE_REGEX = /^\+\d{1,4}[\s.-]?\d[\d\s.-]{6,18}$/;
+
+export function validateContact(data: { nom: string; prenom: string; email: string; telephone: string }): string | null {
+  if (!data.nom.trim()) return "Veuillez indiquer votre nom.";
+  if (!data.prenom.trim()) return "Veuillez indiquer votre prénom.";
+  if (!data.email.trim()) return "Veuillez indiquer votre email.";
+  if (!EMAIL_REGEX.test(data.email)) return "Veuillez indiquer un email valide.";
+  if (!data.telephone.trim()) return "Veuillez indiquer votre numéro de téléphone.";
+  if (!PHONE_REGEX.test(data.telephone.trim())) return "Veuillez indiquer un numéro au format international (ex: +33 6 12 34 56 78 ou +971 50 123 4567).";
+  return null;
+}
+
 export async function submitToGoogleSheets(data: FormData): Promise<{ success: boolean; message: string }> {
   const url = localStorage.getItem("sakho_webhook_url") || GOOGLE_SCRIPT_URL;
 

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { ConciergeBell } from "lucide-react";
 import { toast } from "sonner";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import FormLayout, {
   ContactFields,
   FormSection,
@@ -34,14 +34,20 @@ export default function ConciergerieForm() {
   const [periode, setPeriode] = useState("");
   const [services, setServices] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    const contactError = validateContact(contact);
+    if (contactError) { toast.error(contactError); return; }
     if (!duree) { toast.error("Veuillez indiquer la durée de votre séjour."); return; }
     if (!periode) { toast.error("Veuillez indiquer la période souhaitée."); return; }
     if (services.length === 0) { toast.error("Veuillez sélectionner au moins un service."); return; }
 
-    await submitToGoogleSheets({
+    setIsLoading(true);
+    const result = await submitToGoogleSheets({
       domain: "conciergerie",
       nom: contact.nom,
       prenom: contact.prenom,
@@ -51,8 +57,13 @@ export default function ConciergerieForm() {
       periode: LABELS[periode] || periode,
       services: services.map((s) => LABELS[s] || s),
     });
+    setIsLoading(false);
 
-    setSubmitted(true);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -108,7 +119,7 @@ export default function ConciergerieForm() {
         </FormField>
       </FormSection>
 
-      <SubmitButton label="Demander un service" />
+      <SubmitButton label="Demander un service" isLoading={isLoading} />
     </FormLayout>
   );
 }

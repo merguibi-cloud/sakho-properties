@@ -5,7 +5,6 @@
 import { Link } from "wouter";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
 
 const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663251323115/fOqdbIPZftQfSzJk.png";
 
@@ -305,16 +304,31 @@ export function CheckboxGroup({
   );
 }
 
-export function SubmitButton({ label = "Envoyer" }: { label?: string }) {
+export function SubmitButton({ label = "Envoyer", isLoading = false }: { label?: string; isLoading?: boolean }) {
   return (
     <motion.button
       type="submit"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="w-full py-4 bg-gradient-to-r from-[#B8960C] to-[#D4AF37] text-[#0A0A0A] font-bold text-lg rounded hover:from-[#D4AF37] hover:to-[#B8960C] transition-all duration-500 shadow-lg shadow-[#B8960C]/20"
+      disabled={isLoading}
+      whileHover={isLoading ? {} : { scale: 1.02 }}
+      whileTap={isLoading ? {} : { scale: 0.98 }}
+      className={`w-full py-4 font-bold text-lg rounded transition-all duration-500 shadow-lg shadow-[#B8960C]/20 ${
+        isLoading
+          ? "bg-[#B8960C]/50 text-[#0A0A0A]/60 cursor-not-allowed"
+          : "bg-gradient-to-r from-[#B8960C] to-[#D4AF37] text-[#0A0A0A] hover:from-[#D4AF37] hover:to-[#B8960C]"
+      }`}
       style={{ fontFamily: "var(--font-display)" }}
     >
-      {label}
+      {isLoading ? (
+        <span className="inline-flex items-center gap-2">
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Envoi en cours...
+        </span>
+      ) : (
+        label
+      )}
     </motion.button>
   );
 }

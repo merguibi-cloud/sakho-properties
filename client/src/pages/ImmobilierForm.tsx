@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import FormLayout, {
   ContactFields,
   FormSection,
@@ -45,16 +45,22 @@ export default function ImmobilierForm() {
   const [echeance, setEcheance] = useState("");
   const [dejaInvesti, setDejaInvesti] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    const contactError = validateContact(contact);
+    if (contactError) { toast.error(contactError); return; }
     if (!objectif) { toast.error("Veuillez sélectionner votre objectif immobilier."); return; }
     if (!typeBien) { toast.error("Veuillez sélectionner le type de bien."); return; }
     if (!budget) { toast.error("Veuillez indiquer votre budget estimé."); return; }
     if (!echeance) { toast.error("Veuillez indiquer votre échéance."); return; }
     if (!dejaInvesti) { toast.error("Veuillez indiquer si vous avez déjà investi."); return; }
 
-    await submitToGoogleSheets({
+    setIsLoading(true);
+    const result = await submitToGoogleSheets({
       domain: "immobilier",
       nom: contact.nom,
       prenom: contact.prenom,
@@ -66,8 +72,13 @@ export default function ImmobilierForm() {
       echeance: LABELS[echeance] || echeance,
       dejaInvesti: LABELS[dejaInvesti] || dejaInvesti,
     });
+    setIsLoading(false);
 
-    setSubmitted(true);
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -153,7 +164,7 @@ export default function ImmobilierForm() {
         </FormField>
       </FormSection>
 
-      <SubmitButton label="Envoyer ma demande" />
+      <SubmitButton label="Envoyer ma demande" isLoading={isLoading} />
     </FormLayout>
   );
 }

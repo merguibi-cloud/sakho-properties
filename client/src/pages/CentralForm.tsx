@@ -8,7 +8,7 @@ import { LayoutGrid, ArrowLeft, ArrowRight, Users, Handshake, Building2, Concier
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { submitToGoogleSheets } from "@/hooks/useGoogleSheets";
+import { submitToGoogleSheets, validateContact } from "@/hooks/useGoogleSheets";
 import {
   ContactFields,
   FormSection,
@@ -66,6 +66,7 @@ export default function CentralForm() {
   const [selectedDomain, setSelectedDomain] = useState<Domain | "">("");
   const [contact, setContact] = useState({ nom: "", prenom: "", email: "", telephone: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Candidature Sakho
   const [posteSakho, setPosteSakho] = useState("");
@@ -106,8 +107,9 @@ export default function CentralForm() {
 
   const handleNext = () => {
     if (step === 0 && !selectedDomain) { toast.error("Veuillez sélectionner un domaine."); return; }
-    if (step === 1 && (!contact.nom || !contact.prenom || !contact.email || !contact.telephone)) {
-      toast.error("Veuillez remplir tous les champs de contact."); return;
+    if (step === 1) {
+      const contactError = validateContact(contact);
+      if (contactError) { toast.error(contactError); return; }
     }
     setStep((s) => s + 1);
   };
@@ -145,9 +147,18 @@ export default function CentralForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     if (!validateStep2()) { toast.error("Veuillez remplir tous les champs obligatoires."); return; }
-    await submitToGoogleSheets(buildPayload());
-    setSubmitted(true);
+
+    setIsLoading(true);
+    const result = await submitToGoogleSheets(buildPayload());
+    setIsLoading(false);
+
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      toast.error(result.message);
+    }
   };
 
   const totalSteps = 3;
@@ -312,7 +323,7 @@ export default function CentralForm() {
                   {step < 2 ? (
                     <button type="button" onClick={handleNext} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#B8960C] to-[#D4AF37] text-[#0A0A0A] font-semibold rounded hover:from-[#D4AF37] hover:to-[#B8960C] transition-all duration-300">Suivant<ArrowRight className="w-4 h-4" /></button>
                   ) : (
-                    <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#B8960C] to-[#D4AF37] text-[#0A0A0A] font-bold rounded hover:from-[#D4AF37] hover:to-[#B8960C] transition-all duration-300 shadow-lg shadow-[#B8960C]/20" style={{ fontFamily: "var(--font-display)" }}>Envoyer</motion.button>
+                    <motion.button type="submit" disabled={isLoading} whileHover={isLoading ? {} : { scale: 1.02 }} whileTap={isLoading ? {} : { scale: 0.98 }} className={`flex items-center gap-2 px-8 py-3 font-bold rounded transition-all duration-300 shadow-lg shadow-[#B8960C]/20 ${isLoading ? "bg-[#B8960C]/50 text-[#0A0A0A]/60 cursor-not-allowed" : "bg-gradient-to-r from-[#B8960C] to-[#D4AF37] text-[#0A0A0A] hover:from-[#D4AF37] hover:to-[#B8960C]"}`} style={{ fontFamily: "var(--font-display)" }}>{isLoading ? (<><svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Envoi...</>) : "Envoyer"}</motion.button>
                   )}
                 </div>
               </form>
