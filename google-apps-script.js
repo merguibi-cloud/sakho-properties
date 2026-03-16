@@ -82,6 +82,14 @@ function initialSetup() {
 
       // Freeze header row
       sheet.setFrozenRows(1);
+
+      // Force telephone column (col 5) to plain text on all data rows
+      sheet.getRange(2, 5, sheet.getMaxRows() - 1, 1).setNumberFormat("@");
+
+      // For Immobilier: force Échéance column (col 8) to date format
+      if (name === "Immobilier") {
+        sheet.getRange(2, 8, sheet.getMaxRows() - 1, 1).setNumberFormat("dd/MM/yyyy");
+      }
     }
   }
 
@@ -125,6 +133,7 @@ function initialSetup() {
   Logger.log("✅ Setup terminé ! Les onglets ont été créés avec succès.");
 }
 
+
 // ---- HANDLE POST REQUESTS ----
 function doPost(e) {
   try {
@@ -149,7 +158,8 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var timestamp = new Date().toLocaleString("fr-FR", { timeZone: "Asia/Dubai" });
+    var now = new Date();
+    var timestamp = now.toLocaleString("fr-FR", { timeZone: "Asia/Dubai" });
     var row = [];
 
     switch (domain) {
@@ -168,7 +178,7 @@ function doPost(e) {
       case "immobilier":
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,
-          data.objectif, data.budget, data.echeance, data.dejaInvesti
+          data.objectif, data.budget, new Date(data.echeance), data.dejaInvesti
         ];
         break;
       case "conciergerie":
@@ -185,7 +195,15 @@ function doPost(e) {
         break;
     }
 
-    sheet.appendRow(row);
+    var nextRow = sheet.getLastRow() + 1;
+
+    // For immobilier: format the Échéance cell as date before writing
+    if (domain === "immobilier") {
+      sheet.getRange(nextRow, 8).setNumberFormat("dd/MM/yyyy");
+      SpreadsheetApp.flush();
+    }
+
+    sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",

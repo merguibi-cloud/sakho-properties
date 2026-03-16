@@ -34,6 +34,19 @@ export function validateContact(data: { nom: string; prenom: string; email: stri
   return null;
 }
 
+function calculateEcheanceISO(label: string): string {
+  const date = new Date();
+  const l = label.toLowerCase();
+  if (l.includes("1") && l.includes("3")) {
+    date.setMonth(date.getMonth() + 3);
+  } else if (l.includes("3") && l.includes("6")) {
+    date.setMonth(date.getMonth() + 6);
+  } else if (!l.includes("immédiatement") && !l.includes("immediatement")) {
+    date.setMonth(date.getMonth() + 9); // "+6 mois"
+  }
+  return date.toISOString().split("T")[0]; // "YYYY-MM-DD"
+}
+
 export async function submitToGoogleSheets(data: FormData): Promise<{ success: boolean; message: string }> {
   const url = localStorage.getItem("sakho_webhook_url") || GOOGLE_SCRIPT_URL;
 
@@ -47,6 +60,18 @@ export async function submitToGoogleSheets(data: FormData): Promise<{ success: b
   const payload: Record<string, string> = {};
   for (const [key, value] of Object.entries(data)) {
     payload[key] = Array.isArray(value) ? value.join(", ") : String(value);
+  }
+
+  // Normalize telephone: replace leading "+" with "00" so Google Sheets
+  // does not interpret it as a formula (e.g. "+33 6..." → "0033 6...")
+  if (payload.telephone?.startsWith("+")) {
+    payload.telephone = "00" + payload.telephone.slice(1);
+  }
+
+  // Pre-calculate échéance as an ISO date string so Apps Script receives
+  // a clean "YYYY-MM-DD" value instead of a label like "+6 mois"
+  if (payload.echeance) {
+    payload.echeance = calculateEcheanceISO(payload.echeance);
   }
 
   try {
