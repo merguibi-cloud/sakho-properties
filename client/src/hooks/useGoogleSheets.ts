@@ -62,10 +62,10 @@ export async function submitToGoogleSheets(data: FormData): Promise<{ success: b
     payload[key] = Array.isArray(value) ? value.join(", ") : String(value);
   }
 
-  // Normalize telephone: replace leading "+" with "00" so Google Sheets
-  // does not interpret it as a formula (e.g. "+33 6..." → "0033 6...")
-  if (payload.telephone?.startsWith("+")) {
-    payload.telephone = "00" + payload.telephone.slice(1);
+  // Strip spaces from telephone ("+33 6 12 34 56" → "+33612345656")
+  // Spaces in a "+" prefixed value cause #ERROR! in Google Sheets
+  if (payload.telephone) {
+    payload.telephone = payload.telephone.replace(/\s+/g, "");
   }
 
   // Pre-calculate échéance as an ISO date string so Apps Script receives

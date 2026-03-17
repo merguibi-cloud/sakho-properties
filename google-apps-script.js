@@ -197,13 +197,22 @@ function doPost(e) {
 
     var nextRow = sheet.getLastRow() + 1;
 
-    // For immobilier: format the Échéance cell as date before writing
+    // For immobilier: pre-format the Échéance cell as a date before writing
     if (domain === "immobilier") {
       sheet.getRange(nextRow, 8).setNumberFormat("dd/MM/yyyy");
       SpreadsheetApp.flush();
     }
 
-    sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+    // Write the row without telephone to avoid Google Sheets evaluating
+    // "+33 XXXXXXX" as an invalid formula (space after + causes #ERROR!)
+    var rowToWrite = row.slice();
+    rowToWrite[4] = '';
+    sheet.appendRow(rowToWrite);
+
+    // Write telephone as a text-formula: ="..." forces the cell to store
+    // the value as plain text regardless of its content
+    var phone = String(row[4] || '').replace(/"/g, '""'); // escape any quotes
+    sheet.getRange(nextRow, 5).setFormula('="' + phone + '"');
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
