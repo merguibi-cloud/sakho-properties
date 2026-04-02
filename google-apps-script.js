@@ -39,7 +39,7 @@ var HEADERS = {
   ],
   "Immobilier": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
-    "Objectif immobilier", "Budget estimé", "Échéance", "Déjà investi"
+    "Objectif immobilier", "Type de bien", "Budget estimé", "Échéance", "Déjà investi"
   ],
   "Conciergerie": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
@@ -86,9 +86,9 @@ function initialSetup() {
       // Force telephone column (col 5) to plain text on all data rows
       sheet.getRange(2, 5, sheet.getMaxRows() - 1, 1).setNumberFormat("@");
 
-      // For Immobilier: force Échéance column (col 8) to date format
+      // For Immobilier: force Échéance column (col 9) to date format
       if (name === "Immobilier") {
-        sheet.getRange(2, 8, sheet.getMaxRows() - 1, 1).setNumberFormat("dd/MM/yyyy");
+        sheet.getRange(2, 9, sheet.getMaxRows() - 1, 1).setNumberFormat("dd/MM/yyyy");
       }
     }
   }
@@ -115,8 +115,8 @@ function initialSetup() {
   for (var k = 0; k < domaines.length; k++) {
     var row = k + 2;
     dashboard.getRange(row, 1).setValue(domaines[k]);
-    dashboard.getRange(row, 2).setFormula('=COUNTA(\'' + domaines[k] + '\'!A:A)-1');
-    dashboard.getRange(row, 3).setFormula('=IF(\'' + domaines[k] + '\'!A2="","Aucun",INDEX(\'' + domaines[k] + '\'!A:A,COUNTA(\'' + domaines[k] + '\'!A:A)))');
+    dashboard.getRange(row, 2).setFormula('=COUNTA(\'' + domaines[k] + '\'!A2:A)');
+    dashboard.getRange(row, 3).setFormula('=IF(B' + row + '=0;"Aucun";INDEX(\'' + domaines[k] + '\'!A:A;B' + row + '+1))');
   }
 
   // Total row
@@ -176,9 +176,23 @@ function doPost(e) {
         ];
         break;
       case "immobilier":
+        // Parse écheance: accept ISO date string (from frontend) or text label (fallback)
+        var echeanceDate = new Date(data.echeance);
+        if (isNaN(echeanceDate.getTime())) {
+          // frontend sent the raw label (e.g. "+6 mois") — calculate from it
+          echeanceDate = new Date();
+          var el = (data.echeance || '').toLowerCase();
+          if (el.indexOf('1') !== -1 && el.indexOf('3') !== -1) {
+            echeanceDate.setMonth(echeanceDate.getMonth() + 3);
+          } else if (el.indexOf('3') !== -1 && el.indexOf('6') !== -1) {
+            echeanceDate.setMonth(echeanceDate.getMonth() + 6);
+          } else if (el.indexOf('immédiatement') === -1 && el.indexOf('immediatement') === -1) {
+            echeanceDate.setMonth(echeanceDate.getMonth() + 9);
+          }
+        }
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,
-          data.objectif, data.budget, new Date(data.echeance), data.dejaInvesti
+          data.objectif, data.typeBien, data.budget, echeanceDate, data.dejaInvesti
         ];
         break;
       case "conciergerie":
@@ -195,24 +209,27 @@ function doPost(e) {
         break;
     }
 
-    var nextRow = sheet.getLastRow() + 1;
-
-    // For immobilier: pre-format the Échéance cell as a date before writing
-    if (domain === "immobilier") {
-      sheet.getRange(nextRow, 8).setNumberFormat("dd/MM/yyyy");
-      SpreadsheetApp.flush();
-    }
-
-    // Write the row without telephone to avoid Google Sheets evaluating
-    // "+33 XXXXXXX" as an invalid formula (space after + causes #ERROR!)
+    // Write row without telephone (col 5) — appendRow evaluates "+" as formula
     var rowToWrite = row.slice();
     rowToWrite[4] = '';
     sheet.appendRow(rowToWrite);
 
-    // Write telephone as a text-formula: ="..." forces the cell to store
-    // the value as plain text regardless of its content
-    var phone = String(row[4] || '').replace(/"/g, '""'); // escape any quotes
-    sheet.getRange(nextRow, 5).setFormula('="' + phone + '"');
+    // Use getLastRow() AFTER appendRow to get the exact row that was written.
+    // (Computing nextRow before appendRow caused a 1-row offset when flush()
+    //  was called between them, because flush() made Apps Script count the
+    //  pre-formatted empty cell as an existing row.)
+    var writtenRow = sheet.getLastRow();
+
+    // Strip spaces from telephone then write as text-formula ="..." so Google
+    // Sheets never evaluates "+33XXXXXXX" as a formula.
+    var phone = String(row[4] || '').replace(/\s+/g, '').replace(/"/g, '""');
+    sheet.getRange(writtenRow, 5).setFormula('="' + phone + '"');
+
+    // For immobilier: format the Échéance cell as date (after writing so we
+    // know the correct row; the Date value is already stored correctly)
+    if (domain === "immobilier") {
+      sheet.getRange(writtenRow, 9).setNumberFormat("dd/MM/yyyy");
+    }
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
