@@ -9,7 +9,7 @@
 // L'URL du webhook Google Apps Script (Web App)
 // Copiez l'URL depuis : Déployer > Gérer les déploiements > URL de l'Application Web
 //const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSlSBXFXECXHLes4pYH9TVgmCc9P455nemg8IpG7lh8hPXY8xwHbyX4Q2fDa8n6A79Yg/exec";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzO3jrMgPU4QfpQhzVDPniQ2rPQq_dTklreBLqzSIV4H2AdAMiRhvkgBLbMmH-dRa0Znw/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw-55I0fBGY0UJ_ryQiwhpvUXCMTmAKwp1gr0ZpfaREgpy3goCL4J9aP65mo77gwK08Zw/exec";
 
 export interface FormData {
   domain: string;

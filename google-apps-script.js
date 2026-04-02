@@ -53,7 +53,7 @@ var HEADERS = {
 
 // ---- INITIAL SETUP (run once) ----
 function initialSetup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openById("11cmnDPnoapyt7HFPKxNZ5PXutp6bBYrv1cEqiQ2Qbkg");
 
   // Create sheets with headers
   var sheetNames = Object.values(SHEET_NAMES);
@@ -148,7 +148,7 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = SpreadsheetApp.openById("11cmnDPnoapyt7HFPKxNZ5PXutp6bBYrv1cEqiQ2Qbkg");
     var sheet = ss.getSheetByName(sheetName);
 
     if (!sheet) {
