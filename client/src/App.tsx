@@ -11,7 +11,8 @@ import PartenariatForm from "./pages/PartenariatForm";
 import ImmobilierForm from "./pages/ImmobilierForm";
 import ImmobilierMarocForm from "./pages/ImmobilierMarocForm";
 import ImmobilierSelectPage from "./pages/ImmobilierSelectPage";
-import ConciergerieForm from "./pages/ConciergerieForm";
+import ConciergerieForm, { ConciergerieMarocForm, ConciergerieUSForm, ConciergerieAutresForm } from "./pages/ConciergerieForm";
+import ConciergerieSelectPage from "./pages/ConciergerieSelectPage";
 import ArchispaceForm from "./pages/ArchispaceForm";
 import CentralForm from "./pages/CentralForm";
 
@@ -23,7 +24,11 @@ function Router() {
       <Route path="/immobilier-dubai" component={ImmobilierForm} />
       <Route path="/immobilier-maroc" component={ImmobilierMarocForm} />
       <Route path="/archispace" component={ArchispaceForm} />
-      <Route path="/conciergerie" component={ConciergerieForm} />
+      <Route path="/conciergerie" component={ConciergerieSelectPage} />
+      <Route path="/conciergerie-emirats" component={ConciergerieForm} />
+      <Route path="/conciergerie-maroc" component={ConciergerieMarocForm} />
+      <Route path="/conciergerie-us" component={ConciergerieUSForm} />
+      <Route path="/conciergerie-autres" component={ConciergerieAutresForm} />
       <Route path="/partenariat" component={PartenariatForm} />
       <Route path="/candidature-sakho" component={CandidatureSakhoForm} />
       <Route path="/candidature-archispace" component={CandidatureArchispaceForm} />
