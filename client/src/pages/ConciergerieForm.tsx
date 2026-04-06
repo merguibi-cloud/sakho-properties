@@ -28,7 +28,13 @@ const LABELS: Record<string, string> = {
   "activite": "Activité",
 };
 
-export default function ConciergerieForm() {
+interface Props {
+  domain: string;
+  subtitle: string;
+  sejourLabel: string;
+}
+
+function ConciergerieFormBase({ domain, subtitle, sejourLabel }: Props) {
   const [contact, setContact] = useState({ nom: "", prenom: "", email: "", telephone: "" });
   const [duree, setDuree] = useState("");
   const [periode, setPeriode] = useState("");
@@ -48,7 +54,7 @@ export default function ConciergerieForm() {
 
     setIsLoading(true);
     const result = await submitToGoogleSheets({
-      domain: "conciergerie",
+      domain,
       nom: contact.nom,
       prenom: contact.prenom,
       email: contact.email,
@@ -69,7 +75,7 @@ export default function ConciergerieForm() {
   return (
     <FormLayout
       title="Conciergerie"
-      subtitle="Un service sur-mesure à Dubaï"
+      subtitle={subtitle}
       icon={<ConciergeBell className="w-7 h-7 text-[#B8960C]" />}
       backgroundImage={CONCIERGE_BG}
       onSubmit={handleSubmit}
@@ -81,7 +87,7 @@ export default function ConciergerieForm() {
       />
 
       <FormSection title="Votre séjour">
-        <FormField label="Quelle est la durée de votre séjour à Dubaï ?" required>
+        <FormField label={sejourLabel} required>
           <RadioGroup
             name="duree"
             value={duree}
@@ -122,4 +128,20 @@ export default function ConciergerieForm() {
       <SubmitButton label="Demander un service" isLoading={isLoading} />
     </FormLayout>
   );
+}
+
+export default function ConciergerieForm() {
+  return <ConciergerieFormBase domain="conciergerie-emirats" subtitle="Un service sur-mesure aux Émirats" sejourLabel="Quelle est la durée de votre séjour aux Émirats ?" />;
+}
+
+export function ConciergerieMarocForm() {
+  return <ConciergerieFormBase domain="conciergerie-maroc" subtitle="Un service sur-mesure au Maroc" sejourLabel="Quelle est la durée de votre séjour au Maroc ?" />;
+}
+
+export function ConciergerieUSForm() {
+  return <ConciergerieFormBase domain="conciergerie-us" subtitle="Un service sur-mesure aux États-Unis" sejourLabel="Quelle est la durée de votre séjour aux États-Unis ?" />;
+}
+
+export function ConciergerieAutresForm() {
+  return <ConciergerieFormBase domain="conciergerie-autres" subtitle="Un service sur-mesure" sejourLabel="Quelle est la durée de votre séjour ?" />;
 }
