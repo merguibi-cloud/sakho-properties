@@ -25,7 +25,8 @@ var SHEET_NAMES = {
   "partenariat": "Partenariat",
   "immobilier": "Immobilier",
   "conciergerie": "Conciergerie",
-  "interior-design": "Interior Design"
+  "interior-design": "Interior Design",
+  "immobilier-maroc": "Immobilier Maroc"
 };
 
 var HEADERS = {
@@ -48,6 +49,10 @@ var HEADERS = {
   "Interior Design": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
     "Type de bien", "Ville", "Démarrage souhaité", "Budget design"
+  ],
+  "Immobilier Maroc": [
+    "Date", "Nom", "Prénom", "Email", "Téléphone",
+    "Objectif immobilier", "Ville", "Type de bien", "Budget estimé", "Déjà investi"
   ]
 };
 
@@ -111,7 +116,7 @@ function initialSetup() {
   dashboard.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#0A0A0A").setFontColor("#B8960C");
 
   // Dashboard formulas
-  var domaines = ["Candidature", "Partenariat", "Immobilier", "Conciergerie", "Interior Design"];
+  var domaines = ["Candidature", "Partenariat", "Immobilier", "Conciergerie", "Interior Design", "Immobilier Maroc"];
   for (var k = 0; k < domaines.length; k++) {
     var row = k + 2;
     dashboard.getRange(row, 1).setValue(domaines[k]);
@@ -120,9 +125,9 @@ function initialSetup() {
   }
 
   // Total row
-  dashboard.getRange(8, 1).setValue("TOTAL LEADS").setFontWeight("bold");
-  dashboard.getRange(8, 2).setFormula("=SUM(B2:B6)").setFontWeight("bold");
-  dashboard.getRange(8, 1, 1, 3).setBackground("#B8960C").setFontColor("#FFFFFF");
+  dashboard.getRange(9, 1).setValue("TOTAL LEADS").setFontWeight("bold");
+  dashboard.getRange(9, 2).setFormula("=SUM(B2:B7)").setFontWeight("bold");
+  dashboard.getRange(9, 1, 1, 3).setBackground("#B8960C").setFontColor("#FFFFFF");
 
   // Styling
   dashboard.setColumnWidth(1, 200);
@@ -198,13 +203,19 @@ function doPost(e) {
       case "conciergerie":
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,
-          data.duree, data.periode, (data.services || []).join(", ")
+          data.duree, data.periode, data.services || ""
         ];
         break;
       case "interior-design":
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,
           data.typeBien, data.ville, data.demarrage, data.budgetDesign
+        ];
+        break;
+      case "immobilier-maroc":
+        row = [
+          timestamp, data.nom, data.prenom, data.email, data.telephone,
+          data.objectif, data.ville, data.typeBien, data.budget, data.dejaInvesti
         ];
         break;
     }
@@ -237,6 +248,7 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
+    Logger.log("ERROR: " + error.toString());
     return ContentService.createTextOutput(JSON.stringify({
       status: "error",
       message: error.toString()

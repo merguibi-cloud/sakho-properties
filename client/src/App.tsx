@@ -9,6 +9,8 @@ import CandidatureSakhoForm from "./pages/CandidatureSakhoForm";
 import CandidatureArchispaceForm from "./pages/CandidatureArchispaceForm";
 import PartenariatForm from "./pages/PartenariatForm";
 import ImmobilierForm from "./pages/ImmobilierForm";
+import ImmobilierMarocForm from "./pages/ImmobilierMarocForm";
+import ImmobilierSelectPage from "./pages/ImmobilierSelectPage";
 import ConciergerieForm from "./pages/ConciergerieForm";
 import ArchispaceForm from "./pages/ArchispaceForm";
 import CentralForm from "./pages/CentralForm";
@@ -17,7 +19,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/immobilier" component={ImmobilierForm} />
+      <Route path="/immobilier" component={ImmobilierSelectPage} />
+      <Route path="/immobilier-dubai" component={ImmobilierForm} />
+      <Route path="/immobilier-maroc" component={ImmobilierMarocForm} />
       <Route path="/archispace" component={ArchispaceForm} />
       <Route path="/conciergerie" component={ConciergerieForm} />
       <Route path="/partenariat" component={PartenariatForm} />
