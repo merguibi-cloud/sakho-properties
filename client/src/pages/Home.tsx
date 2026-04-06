@@ -20,7 +20,7 @@ const HERO_BG = "https://private-us-east-1.manuscdn.com/sessionFile/DygVo6WBqHSA
 const formCards = [
   {
     title: "Immobilier",
-    description: "Investissez dans le prestige à Dubaï",
+    description: "Les meilleurs projets ici",
     icon: Building2,
     href: "/immobilier",
   },
@@ -32,7 +32,7 @@ const formCards = [
   },
   {
     title: "Conciergerie",
-    description: "Un service sur-mesure à Dubaï",
+    description: "Un service sur-mesure",
     icon: ConciergeBell,
     href: "/conciergerie",
   },
