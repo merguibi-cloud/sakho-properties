@@ -22,18 +22,30 @@
 // ---- CONFIGURATION ----
 var SHEET_NAMES = {
   "candidature": "Candidature",
+  "candidature-sakho": "Candidature Sakho",
+  "candidature-archispace": "Candidature Archispace",
   "partenariat": "Partenariat",
   "immobilier": "Immobilier",
+  "conciergerie": "Conciergerie",
   "conciergerie-emirats": "Conciergerie Émirats",
   "conciergerie-maroc": "Conciergerie Maroc",
   "conciergerie-us": "Conciergerie US",
   "conciergerie-autres": "Conciergerie Autres",
+  "archispace": "Archispace",
   "interior-design": "Interior Design",
   "immobilier-maroc": "Immobilier Maroc"
 };
 
 var HEADERS = {
   "Candidature": [
+    "Date", "Nom", "Prénom", "Email", "Téléphone",
+    "Poste souhaité", "Basé(e) à Dubaï", "Expérience immobilier/vente", "Disponibilité"
+  ],
+  "Candidature Sakho": [
+    "Date", "Nom", "Prénom", "Email", "Téléphone",
+    "Poste souhaité", "Basé(e) à Dubaï", "Expérience immobilier/vente", "Disponibilité"
+  ],
+  "Candidature Archispace": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
     "Poste souhaité", "Basé(e) à Dubaï", "Expérience immobilier/vente", "Disponibilité"
   ],
@@ -44,6 +56,10 @@ var HEADERS = {
   "Immobilier": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
     "Objectif immobilier", "Type de bien", "Budget estimé", "Échéance", "Déjà investi"
+  ],
+  "Conciergerie": [
+    "Date", "Nom", "Prénom", "Email", "Téléphone",
+    "Durée du séjour", "Période souhaitée", "Services recherchés"
   ],
   "Conciergerie Émirats": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
@@ -60,6 +76,10 @@ var HEADERS = {
   "Conciergerie Autres": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
     "Durée du séjour", "Période souhaitée", "Services recherchés"
+  ],
+  "Archispace": [
+    "Date", "Nom", "Prénom", "Email", "Téléphone",
+    "Type de bien", "Ville", "Démarrage souhaité", "Budget design"
   ],
   "Interior Design": [
     "Date", "Nom", "Prénom", "Email", "Téléphone",
@@ -131,7 +151,7 @@ function initialSetup() {
   dashboard.getRange(1, 1, 1, 3).setFontWeight("bold").setBackground("#0A0A0A").setFontColor("#B8960C");
 
   // Dashboard formulas
-  var domaines = ["Candidature", "Partenariat", "Immobilier", "Conciergerie Émirats", "Conciergerie Maroc", "Conciergerie US", "Conciergerie Autres", "Interior Design", "Immobilier Maroc"];
+  var domaines = ["Candidature Sakho", "Candidature Archispace", "Partenariat", "Immobilier", "Conciergerie", "Conciergerie Émirats", "Conciergerie Maroc", "Conciergerie US", "Conciergerie Autres", "Archispace", "Interior Design", "Immobilier Maroc"];
   for (var k = 0; k < domaines.length; k++) {
     var row = k + 2;
     dashboard.getRange(row, 1).setValue(domaines[k]);
@@ -185,6 +205,8 @@ function doPost(e) {
 
     switch (domain) {
       case "candidature":
+      case "candidature-sakho":
+      case "candidature-archispace":
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,
           data.poste, data.baseDubai, data.experience, data.disponibilite
@@ -216,6 +238,7 @@ function doPost(e) {
           data.objectif, data.typeBien, data.budget, echeanceDate, data.dejaInvesti
         ];
         break;
+      case "conciergerie":
       case "conciergerie-emirats":
       case "conciergerie-maroc":
       case "conciergerie-us":
@@ -225,6 +248,7 @@ function doPost(e) {
           data.duree, data.periode, data.services || ""
         ];
         break;
+      case "archispace":
       case "interior-design":
         row = [
           timestamp, data.nom, data.prenom, data.email, data.telephone,

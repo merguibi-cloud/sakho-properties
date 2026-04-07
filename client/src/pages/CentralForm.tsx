@@ -52,8 +52,9 @@ const LABELS: Record<string, string> = {
   "court": "Court séjour (moins de 7 jours)", "long": "Long séjour (+ de 7 jours)",
   "15-jours": "Dans les 15 jours", "plus-15-jours": "Dans plus de 15 jours",
   "logement": "Logement", "vehicule": "Véhicule", "activite": "Activité",
-  "appartement": "Appartement", "villa": "Villa", "local-commercial": "Local commercial",
+  "appartement": "Appartement", "villa": "Villa", "local-commercial": "Local commercial", "terrain": "Terrain",
   "3-mois-plus": "3 mois et plus", "20k-50k": "20 000 € – 50 000 €", "50k-plus": "+50 000 €",
+  "80k-150k": "80 000 € – 150 000 €", "150k-250k": "150 000 € – 250 000 €", "250k-400k": "250 000 € – 400 000 €", "400k-plus": "400 000 € +",
 };
 
 const stepVariants = {
@@ -103,6 +104,13 @@ export default function CentralForm() {
   const [duree, setDuree] = useState("");
   const [periode, setPeriode] = useState("");
   const [services, setServices] = useState<string[]>([]);
+  // Country selectors
+  const [paysImmo, setPaysImmo] = useState("");
+  const [paysConciergerie, setPaysConciergerie] = useState("");
+  // Immobilier Maroc extra fields
+  const [villeImmoMaroc, setVilleImmoMaroc] = useState("");
+  const [typeBienMaroc, setTypeBienMaroc] = useState("");
+  const [budgetMaroc, setBudgetMaroc] = useState("");
   // Archispace
   const [typeBien, setTypeBien] = useState("");
   const [ville, setVille] = useState("");
@@ -149,9 +157,13 @@ export default function CentralForm() {
       case "partenariat":
         return { ...base, typePartenariat: LABELS[typePartenariat] || typePartenariat, natureActivite: LABELS[natureActivite] || natureActivite, vision };
       case "immobilier":
+        if (paysImmo === "maroc")
+          return { ...base, domain: "immobilier-maroc", objectif: LABELS[objectif] || objectif, ville: villeImmoMaroc, typeBien: LABELS[typeBienMaroc] || typeBienMaroc, budget: LABELS[budgetMaroc] || budgetMaroc, dejaInvesti: LABELS[dejaInvesti] || dejaInvesti };
         return { ...base, objectif: LABELS[objectif] || objectif, typeBien: LABELS[typeBienImmo] || typeBienImmo, budget: LABELS[budget] || budget, echeance: LABELS[echeance] || echeance, dejaInvesti: LABELS[dejaInvesti] || dejaInvesti };
-      case "conciergerie":
-        return { ...base, duree: LABELS[duree] || duree, periode: LABELS[periode] || periode, services: services.map((s) => LABELS[s] || s) };
+      case "conciergerie": {
+        const concDomain = paysConciergerie === "maroc" ? "conciergerie-maroc" : paysConciergerie === "us" ? "conciergerie-us" : paysConciergerie === "autres" ? "conciergerie-autres" : "conciergerie-emirats";
+        return { ...base, domain: concDomain, duree: LABELS[duree] || duree, periode: LABELS[periode] || periode, services: services.map((s) => LABELS[s] || s) };
+      }
       case "archispace":
         return { ...base, typeBien: LABELS[typeBien] || typeBien, ville, demarrage: LABELS[demarrage] || demarrage, budgetDesign: LABELS[budgetDesign] || budgetDesign };
       default:
@@ -186,13 +198,21 @@ export default function CentralForm() {
         if (!natureActivite) return `${domainLabel} : Veuillez indiquer la nature de votre activité.`;
         break;
       case "immobilier":
+        if (!paysImmo) return `${domainLabel} : Veuillez sélectionner une destination.`;
         if (!objectif) return `${domainLabel} : Veuillez sélectionner votre objectif.`;
-        if (!typeBienImmo) return `${domainLabel} : Veuillez sélectionner un type de bien.`;
-        if (!budget) return `${domainLabel} : Veuillez sélectionner votre budget.`;
-        if (!echeance) return `${domainLabel} : Veuillez sélectionner une échéance.`;
+        if (paysImmo === "maroc") {
+          if (!villeImmoMaroc.trim()) return `${domainLabel} : Veuillez indiquer votre ville.`;
+          if (!typeBienMaroc) return `${domainLabel} : Veuillez sélectionner un type de bien.`;
+          if (!budgetMaroc) return `${domainLabel} : Veuillez sélectionner votre budget.`;
+        } else {
+          if (!typeBienImmo) return `${domainLabel} : Veuillez sélectionner un type de bien.`;
+          if (!budget) return `${domainLabel} : Veuillez sélectionner votre budget.`;
+          if (!echeance) return `${domainLabel} : Veuillez sélectionner une échéance.`;
+        }
         if (!dejaInvesti) return `${domainLabel} : Veuillez indiquer si vous avez déjà investi.`;
         break;
       case "conciergerie":
+        if (!paysConciergerie) return `${domainLabel} : Veuillez sélectionner une destination.`;
         if (!duree) return `${domainLabel} : Veuillez sélectionner la durée du séjour.`;
         if (!periode) return `${domainLabel} : Veuillez sélectionner une période.`;
         if (services.length === 0) return `${domainLabel} : Veuillez sélectionner au moins un service.`;
@@ -375,11 +395,23 @@ export default function CentralForm() {
                             </div>
                           )}
                           <FormSection title="Votre projet immobilier">
-                            <FormField label="Quel est votre objectif immobilier ?" required><RadioGroup name="objectif" value={objectif} onChange={setObjectif} options={[{ label: "Investissement locatif", value: "investissement-locatif" }, { label: "Résidence principale", value: "residence-principale" }]} /></FormField>
-                            <FormField label="Quel type de bien recherchez-vous ?" required><RadioGroup name="typeBienImmo" value={typeBienImmo} onChange={setTypeBienImmo} options={[{ label: "Studio", value: "studio" }, { label: "1 bed", value: "1-bed" }, { label: "2 bed", value: "2-bed" }, { label: "3 bed", value: "3-bed" }, { label: "Villa / Maison", value: "villa-maison" }, { label: "Commercial", value: "commercial" }]} /></FormField>
-                            <FormField label="Quel est votre budget estimé ?" required><RadioGroup name="budget" value={budget} onChange={setBudget} options={[{ label: "150 000 – 350 000 €", value: "150k-350k" }, { label: "350 000 € – 500 000 €", value: "350k-500k" }, { label: "500 000 € et +", value: "500k-plus" }]} /></FormField>
-                            <FormField label="À quelle échéance souhaitez-vous concrétiser votre projet ?" required><RadioGroup name="echeance" value={echeance} onChange={setEcheance} options={[{ label: "Immédiatement", value: "immediatement" }, { label: "1 à 3 mois", value: "1-3-mois" }, { label: "3 à 6 mois", value: "3-6-mois" }, { label: "+6 mois", value: "plus-6-mois" }]} /></FormField>
-                            <FormField label="Avez-vous déjà investi dans l'immobilier ?" required><RadioGroup name="dejaInvesti" value={dejaInvesti} onChange={setDejaInvesti} options={[{ label: "Oui", value: "oui" }, { label: "Non", value: "non" }]} /></FormField>
+                            <FormField label="Choisissez votre destination" required>
+                              <RadioGroup name="paysImmo" value={paysImmo} onChange={(v) => { setPaysImmo(v); setTypeBienImmo(""); setBudget(""); setEcheance(""); setTypeBienMaroc(""); setBudgetMaroc(""); setVilleImmoMaroc(""); }} options={[{ label: "🇦🇪  Dubaï", value: "dubai" }, { label: "🇲🇦  Maroc", value: "maroc" }]} />
+                            </FormField>
+                            {paysImmo && <>
+                              <FormField label="Quel est votre objectif immobilier ?" required><RadioGroup name="objectif" value={objectif} onChange={setObjectif} options={[{ label: "Investissement locatif", value: "investissement-locatif" }, { label: "Résidence principale", value: "residence-principale" }]} /></FormField>
+                              {paysImmo === "dubai" && <>
+                                <FormField label="Quel type de bien recherchez-vous ?" required><RadioGroup name="typeBienImmo" value={typeBienImmo} onChange={setTypeBienImmo} options={[{ label: "Studio", value: "studio" }, { label: "1 bed", value: "1-bed" }, { label: "2 bed", value: "2-bed" }, { label: "3 bed", value: "3-bed" }, { label: "Villa / Maison", value: "villa-maison" }, { label: "Commercial", value: "commercial" }]} /></FormField>
+                                <FormField label="Quel est votre budget estimé ?" required><RadioGroup name="budget" value={budget} onChange={setBudget} options={[{ label: "150 000 – 350 000 €", value: "150k-350k" }, { label: "350 000 € – 500 000 €", value: "350k-500k" }, { label: "500 000 € et +", value: "500k-plus" }]} /></FormField>
+                                <FormField label="À quelle échéance souhaitez-vous concrétiser votre projet ?" required><RadioGroup name="echeance" value={echeance} onChange={setEcheance} options={[{ label: "Immédiatement", value: "immediatement" }, { label: "1 à 3 mois", value: "1-3-mois" }, { label: "3 à 6 mois", value: "3-6-mois" }, { label: "+6 mois", value: "plus-6-mois" }]} /></FormField>
+                              </>}
+                              {paysImmo === "maroc" && <>
+                                <FormField label="Depuis quelle ville nous contactez-vous ?" required><TextInput placeholder="Ex: Casablanca, Marrakech, Rabat..." value={villeImmoMaroc} onChange={setVilleImmoMaroc} required /></FormField>
+                                <FormField label="Quel type de bien recherchez-vous ?" required><RadioGroup name="typeBienMaroc" value={typeBienMaroc} onChange={setTypeBienMaroc} options={[{ label: "Appartement", value: "appartement" }, { label: "Villa", value: "villa" }, { label: "Terrain", value: "terrain" }]} /></FormField>
+                                <FormField label="Quelle est votre tranche de budget ?" required><RadioGroup name="budgetMaroc" value={budgetMaroc} onChange={setBudgetMaroc} options={[{ label: "80 000 € – 150 000 €", value: "80k-150k" }, { label: "150 000 € – 250 000 €", value: "150k-250k" }, { label: "250 000 € – 400 000 €", value: "250k-400k" }, { label: "400 000 € +", value: "400k-plus" }]} /></FormField>
+                              </>}
+                              <FormField label="Avez-vous déjà investi dans l'immobilier ?" required><RadioGroup name="dejaInvesti" value={dejaInvesti} onChange={setDejaInvesti} options={[{ label: "Oui", value: "oui" }, { label: "Non", value: "non" }]} /></FormField>
+                            </>}
                           </FormSection>
                         </div>
                       )}
@@ -410,9 +442,14 @@ export default function CentralForm() {
                             </div>
                           )}
                           <FormSection title="Votre séjour">
-                            <FormField label="Quelle est la durée de votre séjour à Dubaï ?" required><RadioGroup name="duree" value={duree} onChange={setDuree} options={[{ label: "Court séjour (moins de 7 jours)", value: "court" }, { label: "Long séjour (+ de 7 jours)", value: "long" }]} /></FormField>
-                            <FormField label="À quelle période souhaitez-vous bénéficier des services ?" required><RadioGroup name="periode" value={periode} onChange={setPeriode} options={[{ label: "Immédiatement", value: "immediatement" }, { label: "Dans les 15 jours", value: "15-jours" }, { label: "Dans plus de 15 jours", value: "plus-15-jours" }]} /></FormField>
-                            <FormField label="Quel type de services recherchez-vous principalement ?" required><CheckboxGroup options={[{ label: "Logement", value: "logement" }, { label: "Véhicule", value: "vehicule" }, { label: "Activité", value: "activite" }]} values={services} onChange={setServices} /></FormField>
+                            <FormField label="Choisissez votre destination" required>
+                              <RadioGroup name="paysConciergerie" value={paysConciergerie} onChange={setPaysConciergerie} options={[{ label: "🇦🇪  Émirats", value: "emirats" }, { label: "🇲🇦  Maroc", value: "maroc" }, { label: "🇺🇸  US", value: "us" }, { label: "🌍  Autres", value: "autres" }]} />
+                            </FormField>
+                            {paysConciergerie && <>
+                              <FormField label="Quelle est la durée de votre séjour ?" required><RadioGroup name="duree" value={duree} onChange={setDuree} options={[{ label: "Court séjour (moins de 7 jours)", value: "court" }, { label: "Long séjour (+ de 7 jours)", value: "long" }]} /></FormField>
+                              <FormField label="À quelle période souhaitez-vous bénéficier des services ?" required><RadioGroup name="periode" value={periode} onChange={setPeriode} options={[{ label: "Immédiatement", value: "immediatement" }, { label: "Dans les 15 jours", value: "15-jours" }, { label: "Dans plus de 15 jours", value: "plus-15-jours" }]} /></FormField>
+                              <FormField label="Quel type de services recherchez-vous principalement ?" required><CheckboxGroup options={[{ label: "Logement", value: "logement" }, { label: "Véhicule", value: "vehicule" }, { label: "Activité", value: "activite" }]} values={services} onChange={setServices} /></FormField>
+                            </>}
                           </FormSection>
                         </div>
                       )}
