@@ -25,7 +25,7 @@ const LABELS: Record<string, string> = {
   "1-3-mois": "1 à 3 mois",
   "3-mois-plus": "3 mois et plus",
   "20k-50k": "20 000 € – 50 000 €",
-  "50k-plus": "+50 000 €",
+  "50k-plus": "50 000 € +",
 };
 
 export default function ArchispaceForm() {
@@ -126,7 +126,7 @@ export default function ArchispaceForm() {
             onChange={setBudgetDesign}
             options={[
               { label: "20 000 € – 50 000 €", value: "20k-50k" },
-              { label: "+50 000 €", value: "50k-plus" },
+              { label: "50 000 € +", value: "50k-plus" },
             ]}
           />
         </FormField>
