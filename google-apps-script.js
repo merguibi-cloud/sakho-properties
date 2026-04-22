@@ -20,6 +20,8 @@
  */
 
 // ---- CONFIGURATION ----
+var NOTIFICATION_EMAIL = "youssef.koutari@koutquekout.com";
+
 var SHEET_NAMES = {
   "candidature": "Candidature",
   "candidature-sakho": "Candidature Sakho",
@@ -284,6 +286,22 @@ function doPost(e) {
     if (domain === "immobilier") {
       sheet.getRange(writtenRow, 9).setNumberFormat("dd/MM/yyyy");
     }
+
+    // Email notification
+    var headers = HEADERS[sheetName] || [];
+    var emailBody = "Nouveau lead reçu via " + sheetName + "\n";
+    emailBody += "Date : " + timestamp + "\n\n";
+    for (var i = 0; i < headers.length; i++) {
+      var val = row[i];
+      if (val !== undefined && val !== "") {
+        emailBody += headers[i] + " : " + val + "\n";
+      }
+    }
+    MailApp.sendEmail({
+      to: NOTIFICATION_EMAIL,
+      subject: "🔔 Nouveau lead – " + sheetName,
+      body: emailBody
+    });
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",

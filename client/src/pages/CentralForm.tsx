@@ -53,7 +53,7 @@ const LABELS: Record<string, string> = {
   "15-jours": "Dans les 15 jours", "plus-15-jours": "Dans plus de 15 jours",
   "logement": "Logement", "vehicule": "Véhicule", "activite": "Activité",
   "appartement": "Appartement", "villa": "Villa", "local-commercial": "Local commercial", "terrain": "Terrain",
-  "3-mois-plus": "3 mois et plus", "20k-50k": "20 000 € – 50 000 €", "50k-plus": "+50 000 €",
+  "3-mois-plus": "3 mois et plus", "20k-50k": "20 000 € – 50 000 €", "50k-plus": "50 000 € +",
   "80k-150k": "80 000 € – 150 000 €", "150k-250k": "150 000 € – 250 000 €", "250k-400k": "250 000 € – 400 000 €", "400k-plus": "400 000 € +",
 };
 
@@ -428,7 +428,7 @@ export default function CentralForm() {
                             <FormField label="Quel type de bien est concerné ?" required><RadioGroup name="typeBien" value={typeBien} onChange={setTypeBien} options={[{ label: "Appartement", value: "appartement" }, { label: "Villa", value: "villa" }, { label: "Local commercial", value: "local-commercial" }]} /></FormField>
                             <FormField label="Dans quelle ville se situe votre logement ?" required><TextInput placeholder="Ex : Dubaï, Paris, Londres..." value={ville} onChange={setVille} required /></FormField>
                             <FormField label="Quand souhaitez-vous démarrer l'aménagement ?" required><RadioGroup name="demarrage" value={demarrage} onChange={setDemarrage} options={[{ label: "Immédiatement", value: "immediatement" }, { label: "1 à 3 mois", value: "1-3-mois" }, { label: "3 mois et plus", value: "3-mois-plus" }]} /></FormField>
-                            <FormField label="Quel est votre budget estimé pour le design / aménagement ?" required><RadioGroup name="budgetDesign" value={budgetDesign} onChange={setBudgetDesign} options={[{ label: "20 000 € – 50 000 €", value: "20k-50k" }, { label: "+50 000 €", value: "50k-plus" }]} /></FormField>
+                            <FormField label="Quel est votre budget estimé pour le design / aménagement ?" required><RadioGroup name="budgetDesign" value={budgetDesign} onChange={setBudgetDesign} options={[{ label: "20 000 € – 50 000 €", value: "20k-50k" }, { label: "50 000 € +", value: "50k-plus" }]} /></FormField>
                           </FormSection>
                         </div>
                       )}
